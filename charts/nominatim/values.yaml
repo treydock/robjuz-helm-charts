@@ -60,6 +60,7 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+podLabels: {}
 podAnnotations: {}
 
 podSecurityContext:
@@ -91,6 +92,10 @@ ingress:
   ## @param ingress.hostname Default host for the ingress record
   ##
   hostname: nominatim.local
+
+  ## @param ingress.hostnameAlias Additional host for the ingress record
+  ##
+  hostnameAlias: null
   ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.hostname` parameter
   ## TLS certificates will be retrieved from a TLS secret with name: `{{- printf "%s-tls" .Values.ingress.hostname }}`
   ## You can:
