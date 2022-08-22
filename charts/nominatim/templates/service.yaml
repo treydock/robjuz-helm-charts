@@ -4,6 +4,10 @@ metadata:
   name: {{ include "nominatim.fullname" . }}
   labels:
     {{- include "nominatim.labels" . | nindent 4 }}
+{{- with .Values.service.annotations }}
+  annotations:
+    {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 4 }}
+{{- end }}
 spec:
   type: {{ .Values.service.type }}
   ports:

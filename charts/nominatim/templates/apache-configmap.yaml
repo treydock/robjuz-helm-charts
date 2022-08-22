@@ -2,6 +2,61 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "nominatim.fullname" . }}-apache-configmap
-  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "nominatim.labels" . | nindent 4 }}
 data:
-{{ (.Files.Glob "files/000-default.conf").AsConfig | indent 2 }}
+  000-default.conf: |
+    Listen {{ include "nominatim.containerPort" . }}
+    <VirtualHost *:{{ include "nominatim.containerPort" . }}>
+      DocumentRoot /nominatim/website
+      CustomLog /dev/stdout combined
+      ErrorLog  /dev/stderr
+      LogLevel info
+
+    {{- if .Values.nominatimUi.enabled }}
+      <Directory "/nominatim-ui/dist">
+        DirectoryIndex search.html
+        Require all granted
+      </Directory>
+
+      Alias /ui /nominatim-ui/dist
+    {{- end }}
+
+      <Directory /nominatim/website>
+        Options FollowSymLinks MultiViews
+        DirectoryIndex search.php
+        Require all granted
+
+      {{- if .Values.nominatimUi.enabled }}
+        RewriteEngine On
+
+        # This must correspond to the URL where nominatim can be found.
+        RewriteBase "/"
+
+        # If no endpoint is given, then use search.
+        RewriteRule ^(/|$)   "search.php"
+
+        # If format-html is explicity requested, forward to the UI.
+        RewriteCond %{QUERY_STRING} "format=html"
+        RewriteRule ^([^/]+).php ui/$1.html [R,END]
+        # Same but .php suffix is missing.
+        RewriteCond /nominatim-ui/dist -d
+        RewriteCond %{QUERY_STRING} "format=html"
+        RewriteRule ^([^/]+) ui/$1.html [R,END]
+
+        # If no format parameter is there then forward anything
+        # but /reverse and /lookup to the UI.
+        RewriteCond %{QUERY_STRING} "!format="
+        RewriteCond %{REQUEST_URI}  "!/lookup"
+        RewriteCond %{REQUEST_URI}  "!/reverse"
+        RewriteRule ^([^/]+).php ui/$1.html [R,END]
+        # Same but .php suffix is missing.
+        RewriteCond %{QUERY_STRING} "!format="
+        RewriteCond %{REQUEST_URI}  "!/lookup"
+        RewriteCond %{REQUEST_URI}  "!/reverse"
+        RewriteRule ^([^/]+) ui/$1.html [R,END]
+      {{- end }}
+      </Directory>
+
+      AddType text/html .php
+    </VirtualHost>

@@ -1,21 +1,30 @@
-{{- if and .Values.nominatimReplications.enabled (not .Values.nominatimInitialize.enabled) }}
+{{- if .Values.nominatimReplications.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "nominatim.fullname" . }}-updates
   labels:
-    app.kubernetes.io/name: {{ include "nominatim.name" . }}-updates
+    {{- include "nominatim.labels.replication" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "nominatim.name" . }}-updates
+      {{- include "nominatim.selectorLabels.replication" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "nominatim.name" . }}-updates
+        {{- with .Values.podLabels }}
+          {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+        {{- end }}
+          {{- include "nominatim.selectorLabels.replication" . | nindent 8 }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}-updates
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           workingDir: /nominatim
@@ -28,32 +37,76 @@ spec:
               value: {{ .Values.nominatimReplications.replicationUrl }}
             - name: NOMINATIM_IMPORT_STYLE
               value: {{ .Values.nominatimInitialize.importStyle }}
-            {{- if .Values.flatnode.enabled }}
             - name: NOMINATIM_FLATNODE_FILE
-              value: /nominatim/flatnode/flatnode.file
-            {{- end }}
+              value: /nominatim/flatnode.file
+            - name: NOMINATIM_REPLICATION_UPDATE_INTERVAL
+              value: {{ .Values.nominatimReplications.updateInterval | quote }}
+            - name: NOMINATIM_REPLICATION_RECHECK_INTERVAL
+              value: {{ .Values.nominatimReplications.recheckInterval | quote }}
             {{- if .Values.nominatimReplications.extraEnv }}
             {{- include "common.tplvalues.render" (dict "value" .Values.nominatim.extraEnv "context" $) | nindent 12 }}
           {{- end }}
           command:
             - nominatim
             - replication
+          {{- with .Values.nominatimReplications.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - mountPath: /dev/shm
               name: dshm
-            {{- if .Values.flatnode.enabled }}
-            - mountPath: /nominatim/flatnode
-              name: nominatim
-              subPath: flatnode
+            {{- if .Values.projectDir.enabled }}
+            - mountPath: /nominatim
+              name: project-dir
           {{- end }}
+        {{- if .Values.nominatimInitialize.enabled }}
+      initContainers:
+        - name: wait-for-db
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          workingDir: /nominatim
+          command:
+          - /bin/bash
+          - -ec
+          - |
+            until psql -t -c "SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'import_status')" 2>/dev/null | grep -q t
+            do
+              echo "Waiting for postgresql database to exist"
+              sleep 30
+            done
+          env:
+            - name: PGHOST
+              value: {{ include "nominatim.databaseHost" . }}
+            - name: PGUSER
+              value: {{ include "nominatim.databaseRoot" . }}
+            - name: PGPASSWORD
+              value: {{ include "nominatim.databaseRootPassword" . }}
+            - name: PGDATABASE
+              value: {{ include "nominatim.databaseName" . }}
+          securityContext:
+            {{- toYaml .Values.initSecurityContext | nindent 12 }}
+          volumeMounts:
+          {{- if .Values.projectDir.enabled }}
+            - mountPath: /nominatim
+              name: project-dir
+          {{- end }}
+          {{- with .Values.initResources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- end }}
       restartPolicy: Always
       volumes:
-      {{- if  .Values.flatnode.enabled }}
-      - name: nominatim
+      {{- if  .Values.projectDir.enabled }}
+      - name: project-dir
         persistentVolumeClaim:
-          claimName: {{ .Values.flatnode.existingClaim | default (include "nominatim.fullname" .) }}
+          claimName: {{ .Values.projectDir.existingClaim | default (include "nominatim.fullname" .) }}
       {{- end }}
       - name: dshm
         emptyDir:
           medium: Memory
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+      {{- end }}
 {{- end }}

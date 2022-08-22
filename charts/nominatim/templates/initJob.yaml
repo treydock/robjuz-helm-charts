@@ -3,99 +3,20 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ include "nominatim.fullname" . }}-init
+  labels:
+    {{- include "nominatim.labels" . | nindent 4 }}
 spec:
   template:
+    {{- with .Values.podLabels }}
+    metadata:
+      labels:
+        {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+    {{- end }}
     spec:
-      initContainers:
-{{- if .Values.nominatimInitialize.customStyleUrl }}
-        - name: download-custom-style
-          image: curlimages/curl
-          workingDir: /nominatim
-          volumeMounts:
-            - mountPath: /nominatim
-              name: data
-          command:
-            - curl
-            - {{ .Values.nominatimInitialize.customStyleUrl }}
-            - -L
-            - -o
-            - custom.style
-{{- end }}
-
-{{- if .Values.nominatimInitialize.importWikipedia }}
-        - name: download-wikipedia
-          image: curlimages/curl
-          workingDir: /nominatim
-          volumeMounts:
-            - mountPath: /nominatim
-              name: data
-          command:
-            - curl
-            - https://nominatim.org/data/wikimedia-importance.sql.gz
-            - -L
-            - -o
-            - wikimedia-importance.sql.gz
-{{- end }}
-
-{{- if .Values.nominatimInitialize.importGB_Postcode }}
-        - name: download-gb-postcode
-          image: curlimages/curl
-          workingDir: /nominatim
-          volumeMounts:
-            - mountPath: /nominatim
-              name: data
-          command:
-            - curl
-            - https://www.nominatim.org/data/gb_postcodes.csv.gz
-            - -L
-            - -o
-            - gb_postcodes.csv.gz
-{{- end }}
-
-{{- if .Values.nominatimInitialize.importUS_Postcode }}
-        - name: download-us-postcode
-          image: curlimages/curl
-          workingDir: /nominatim
-          volumeMounts:
-            - mountPath: /nominatim
-              name: data
-          command:
-            - curl
-            - https://www.nominatim.org/data/us_postcodes.csv.gz
-            - -L
-            - -o
-            - us_postcodes.csv.gz
-{{- end }}
-
-        - name: download-pbf
-          image: curlimages/curl
-          workingDir: /nominatim
-          volumeMounts:
-            - mountPath: /nominatim
-              name: data
-          command:
-            - curl
-            - -L
-            - {{ .Values.nominatimInitialize.pbfUrl }}
-            - --create-dirs
-            - -o
-            - data.osm.pbf
-
-        - name: clear-database
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          env:
-            - name: PGHOST
-              value: {{ include "nominatim.databaseHost" . }}
-            - name: PGUSER
-              value: {{ include "nominatim.databaseRoot" . }}
-            - name: PGPASSWORD
-              value: {{ include "nominatim.databaseRootPassword" . }}
-            - name: PGDATABASE
-              value: postgres
-          command:
-            - psql
-            - -c
-            - "DROP DATABASE IF EXISTS nominatim"
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -110,50 +31,81 @@ spec:
               value: {{ .Values.nominatimInitialize.importStyle }}
             {{- end }}
             - name: NOMINATIM_DATABASE_DSN
-              value: {{ include "nominatim.databaseUrl" . }}
+              value: {{ include "nominatim.databaseRootUrl" . }}
             - name: NOMINATIM_DATABASE_MODULE_PATH
               value: {{ .Values.nominatim.databaseModulePath }}
-            {{- if .Values.flatnode.enabled }}
             - name: NOMINATIM_FLATNODE_FILE
-              value: /nominatim/flatnode/flatnode.file
-            {{- end }}
+              value: /nominatim/flatnode.file
             - name: REPLICATION_ENABLED
               value: {{ .Values.nominatimReplications.enabled | quote }}
             - name: THREADS
               value: {{ .Values.nominatimInitialize.threads | quote }}
             - name: NOMINATIM_DATABASE_WEBUSER
               value: {{ include "nominatim.databaseUser" . }}
+            - name: PGHOST
+              value: {{ include "nominatim.databaseHost" . }}
+            - name: PGUSER
+              value: {{ include "nominatim.databaseRoot" . }}
+            - name: PGPASSWORD
+              value: {{ include "nominatim.databaseRootPassword" . }}
+            - name: PGDATABASE
+              value: postgres
           command:
             - /bin/bash
             - -ec
             - |
+              set -x
+
+            {{- if .Values.nominatimInitialize.customStyleUrl }}
+              curl -L -o custom.style {{ .Values.nominatimInitialize.customStyleUrl }}
+            {{- end }}
+
+            {{- if .Values.nominatimInitialize.importWikipedia }}
+              curl -L -o wikimedia-importance.sql.gz https://nominatim.org/data/wikimedia-importance.sql.gz
+            {{- end }}
+
+            {{- if .Values.nominatimInitialize.importGB_Postcode }}
+              curl -L -o gb_postcodes.csv.gz https://www.nominatim.org/data/gb_postcodes.csv.gz
+            {{- end }}
+
+            {{- if .Values.nominatimInitialize.importUS_Postcode }}
+              curl -L -o us_postcodes.csv.gz https://www.nominatim.org/data/us_postcodes.csv.gz
+            {{- end }}
+              curl -L -o data.osm.pbf {{ .Values.nominatimInitialize.pbfUrl }}
+
+              psql -c "DROP DATABASE IF EXISTS {{ include "nominatim.databaseName" . }}"
+  
               nominatim import --osm-file data.osm.pbf --threads $THREADS
               nominatim admin --check-database
 
               if [ "$REPLICATION_ENABLED" = "true" ]; then
                 nominatim replication --init
-              fi;
-
+              fi
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
-            - mountPath: /nominatim
-              name: data
             - mountPath: /dev/shm
               name: dshm
-            {{- if .Values.flatnode.enabled }}
-            - mountPath: /nominatim/flatnode
-              name: flatnode
-              subPath: flatnode
+            {{- if .Values.projectDir.enabled }}
+            - mountPath: /nominatim
+              name: project-dir
             {{- end }}
       restartPolicy: OnFailure
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+      {{- end }}
       volumes:
-        {{- if  .Values.flatnode.enabled }}
-        - name: flatnode
+        {{- if  .Values.projectDir.enabled }}
+        - name: project-dir
           persistentVolumeClaim:
-            claimName: {{ .Values.flatnode.existingClaim | default (include "nominatim.fullname" .) }}
+            claimName: {{ .Values.projectDir.existingClaim | default (include "nominatim.fullname" .) }}
         {{- end }}
         - name: dshm
           emptyDir:
             medium: Memory
-        - name: data
-          emptyDir: {}
 {{- end }}

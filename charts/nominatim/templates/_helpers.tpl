@@ -43,10 +43,30 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
+Replication labels
+*/}}
+{{- define "nominatim.labels.replication" -}}
+helm.sh/chart: {{ include "nominatim.chart" . }}
+{{ include "nominatim.selectorLabels.replication" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
 Selector labels
 */}}
 {{- define "nominatim.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "nominatim.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Replication selector labels
+*/}}
+{{- define "nominatim.selectorLabels.replication" -}}
+app.kubernetes.io/name: {{ include "nominatim.name" . }}-updates
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
@@ -87,7 +107,7 @@ Add environment variables to configure database values
 
 {{- define "nominatim.databasePort" -}}
 {{- if .Values.postgresql.enabled }}
-    {{- printf "%d" (.Values.postgresql.service.port | int ) -}}
+    {{- printf "%d" (.Values.postgresql.service.ports.postgresql | int ) -}}
 {{- else -}}
     {{- printf "%d" (.Values.externalDatabase.port | int ) -}}
 {{- end -}}
@@ -95,7 +115,7 @@ Add environment variables to configure database values
 
 
 {{- define "nominatim.databaseName" -}}
-{{- "nominatim" -}}
+{{- default "nominatim" .Values.postgresql.auth.database -}}
 {{- end -}}
 
 {{- define "nominatim.databaseRoot" -}}
@@ -108,7 +128,7 @@ Add environment variables to configure database values
 
 {{- define "nominatim.databaseUser" -}}
 {{- if .Values.postgresql.enabled }}
-    {{- printf "%s" .Values.postgresql.auth.password -}}
+    {{- printf "%s" .Values.postgresql.auth.username -}}
 {{- else -}}
     {{- printf "%s" .Values.externalDatabase.user -}}
 {{- end -}}
@@ -135,6 +155,10 @@ Create the database URL.
 */}}
 {{- define "nominatim.databaseUrl" -}}
 pgsql:host={{ include "nominatim.databaseHost" . }};port={{ include "nominatim.databasePort" . }};user={{ include "nominatim.databaseUser" . }};password={{ include "nominatim.databasePassword" . }};dbname={{ include "nominatim.databaseName" . }}
+{{- end }}
+
+{{- define "nominatim.databaseRootUrl" -}}
+pgsql:host={{ include "nominatim.databaseHost" . }};port={{ include "nominatim.databasePort" . }};user={{ include "nominatim.databaseRoot" . }};password={{ include "nominatim.databaseRootPassword" . }};dbname={{ include "nominatim.databaseName" . }}
 {{- end }}
 
 {{- define "nominatim.containerPort" -}}

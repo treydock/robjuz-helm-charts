@@ -41,6 +41,9 @@ nominatimInitialize:
 nominatimReplications:
   enabled: false
   replicationUrl: https://download.geofabrik.de/europe/germany/sachsen-updates/
+  updateInterval: 86400
+  recheckInterval: 900
+  resources: {}
 
 nominatim:
   databaseModulePath: /bitnami
@@ -74,9 +77,15 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+initSecurityContext:
+  runAsUser: 1
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+
 service:
   type: ClusterIP
-  port: 80
+  port: 8080
+  annotations: {}
 
 ingress:
   ## @param ingress.enabled Enable ingress record generation for nominatim
@@ -137,6 +146,8 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+initResources: {}
+
 autoscaling:
   enabled: false
   minReplicas: 1
@@ -150,24 +161,24 @@ tolerations: []
 
 affinity: {}
 
-flatnode:
-  ## @param flatnode.enabled Enable flatnode using Persistent Volume Claims
+projectDir:
+  ## @param data.enabled Enable projectDir using Persistent Volume Claims
   ##
-  enabled: false
-  ## @param flatnode.storageClass Persistent Volume storage class
+  enabled: true
+  ## @param projectDir.storageClass Persistent Volume storage class
   ## If defined, storageClassName: <storageClass>
   ## If set to "-", storageClassName: "", which disables dynamic provisioning
   ## If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner
   ##
   storageClass:
-  ## @param flatnode.accessModes [array] Persistent Volume access modes
+  ## @param projectDir.accessModes [array] Persistent Volume access modes
   ##
   accessModes:
     - ReadWriteMany
-  ## @param flatnode.size Persistent Volume size
+  ## @param projectDir.size Persistent Volume size
   ##
   size: 100Gi
-  ## @param persistence.existingClaim The name of an existing PVC to use for persistence
+  ## @param projectDir.existingClaim The name of an existing PVC to use for persistence
   ##
   existingClaim:
 
@@ -179,10 +190,14 @@ postgresql:
     tag: 14.4.0-4.0.1
 
   auth:
+    database: nominatim
     postgresPassword: nominatim
     username: nominatim
     password: nominatim
 
+  service:
+    ports:
+      postgresql: 5432
 
   persistence:
     size: 500Gi

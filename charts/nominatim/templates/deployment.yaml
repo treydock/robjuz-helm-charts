@@ -1,4 +1,3 @@
-{{- if not .Values.nominatimInitialize.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,7 +22,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-      {{- with .values.podLabels }}
+      {{- with .Values.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
       {{- end }}
         {{- include "nominatim.selectorLabels" . | nindent 8 }}
@@ -52,12 +51,16 @@ spec:
               value: {{ .Values.nominatim.databaseModulePath }}
             - name: NOMINATIM_REPLICATION_URL
               value: {{ .Values.nominatimReplications.replicationUrl }}
+            - name: NOMINATIM_FLATNODE_FILE
+              value: /nominatim/flatnode.file
           command:
             - /bin/bash
             - -ec
             - |
                 nominatim refresh --website
+                {{- if .Values.nominatimUi.enabled }}
                 a2enmod rewrite
+                {{- end }}
                 /usr/sbin/apache2ctl -D FOREGROUND
           ports:
             - name: http
@@ -65,50 +68,87 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /
+              path: /status
               port: http
           readinessProbe:
             httpGet:
-              path: /
+              path: /status
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - mountPath: /dev/shm
               name: dshm
-              {{- if .Values.flatnode.enabled }}
-            - mountPath: /nominatim/flatnode
-              name: flatnode
-              subPath: flatnode
-              {{- end }}
+            {{- if .Values.projectDir.enabled }}
+            - mountPath: /nominatim
+              name: project-dir
+            {{- end }}
             {{- if .Values.nominatimUi.enabled }}
             - mountPath: /etc/apache2/sites-available
               name: apache-config
-            - mountPath: /nominatim/nominatim-ui
+            - mountPath: /nominatim-ui
               name: nominatim-ui
             {{- if .Values.nominatimUi.configuration }}
             - name: ui-config
-              mountPath: /nominatim/nominatim-ui/dist/theme/config.theme.js
+              mountPath: /nominatim-ui/dist/theme/config.theme.js
               subPath: config.theme.js
             {{- end }}
             {{- end }}
-      {{- if .Values.nominatimUi.enabled }}
+      {{- if or .Values.nominatimInitialize.enabled .Values.nominatimUi.enabled }}
       initContainers:
-         - name: nominatim-ui-download
-           image: curlimages/curl
-           workingDir: /nominatim/nominatim-ui
-           command:
-           - /bin/sh
-           - -ec
-           - |
-             curl -L {{ include "nominatim.uiUrl" . }} | tar -xz --strip-components 1
-           securityContext:
-             runAsUser: 1
-             allowPrivilegeEscalation: false
-             readOnlyRootFilesystem: true
-           volumeMounts:
-            - mountPath: /nominatim/nominatim-ui
-              name: nominatim-ui
+      {{- if .Values.nominatimInitialize.enabled }}
+        - name: wait-for-db
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          workingDir: /nominatim
+          command:
+          - /bin/bash
+          - -ec
+          - |
+            until psql -t -c "SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'import_status')" 2>/dev/null | grep -q t
+            do
+              echo "Waiting for postgresql database to exist"
+              sleep 30
+            done
+          env:
+            - name: PGHOST
+              value: {{ include "nominatim.databaseHost" . }}
+            - name: PGUSER
+              value: {{ include "nominatim.databaseRoot" . }}
+            - name: PGPASSWORD
+              value: {{ include "nominatim.databaseRootPassword" . }}
+            - name: PGDATABASE
+              value: {{ include "nominatim.databaseName" . }}
+          securityContext:
+            {{- toYaml .Values.initSecurityContext | nindent 12 }}
+          volumeMounts:
+          {{- if .Values.projectDir.enabled }}
+            - mountPath: /nominatim
+              name: project-dir
+          {{- end }}
+          {{- with .Values.initResources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- end }}
+      {{- if .Values.nominatimUi.enabled }}
+        - name: nominatim-ui-download
+          image: curlimages/curl
+          workingDir: /nominatim-ui
+          command:
+          - /bin/sh
+          - -ec
+          - |
+            curl -L {{ include "nominatim.uiUrl" . }} | tar -xz --strip-components 1
+          securityContext:
+            {{- toYaml .Values.initSecurityContext | nindent 12 }}
+          volumeMounts:
+          - mountPath: /nominatim-ui
+            name: nominatim-ui
+          {{- with .Values.initResources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -123,18 +163,18 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        {{- if  .Values.flatnode.enabled }}
-        - name: flatnode
+        {{- if  .Values.projectDir.enabled }}
+        - name: project-dir
           persistentVolumeClaim:
-            claimName: {{ .Values.flatnode.existingClaim | default (include "nominatim.fullname" .) }}
+            claimName: {{ .Values.projectDir.existingClaim | default (include "nominatim.fullname" .) }}
         {{- end }}
         - name: dshm
           emptyDir:
             medium: Memory
-        {{- if .Values.nominatimUi.enabled }}
         - name: apache-config
           configMap:
             name: {{ include "nominatim.fullname" . }}-apache-configmap
+        {{- if .Values.nominatimUi.enabled }}
         {{- if .Values.nominatimUi.configuration }}
         - name: ui-config
           configMap:
@@ -143,4 +183,3 @@ spec:
         - name: nominatim-ui
           emptyDir: {}
         {{- end }}
-{{- end }}
