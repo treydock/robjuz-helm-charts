@@ -421,7 +421,7 @@ entries:
   nominatim:
   - apiVersion: v2
     appVersion: "4.0"
-    created: "2022-08-01T19:13:33.268868774Z"
+    created: "2022-08-22T20:56:51.691866189Z"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -431,12 +431,12 @@ entries:
       repository: file://./charts/postgresql
       version: 11.6.20
     description: A Helm chart for Kubernetes
-    digest: f703f6e7a840ffb4a18a64393a023009316e0af225b06a4bc30d0576e2244e1a
+    digest: 3527be5deaaa6c212dd5fb604a80b0985e8f5d201392d6516cbbd6cd665828df
     name: nominatim
     type: application
     urls:
-    - https://github.com/robjuz/helm-charts/releases/download/nominatim-2.0.0-rc2/nominatim-2.0.0-rc2.tgz
-    version: 2.0.0-rc2
+    - https://github.com/treydock/robjuz-helm-charts/releases/download/nominatim-2.0.0-rc3/nominatim-2.0.0-rc3.tgz
+    version: 2.0.0-rc3
   - apiVersion: v2
     appVersion: "4.0"
     created: "2022-08-22T20:48:35.108785985Z"
@@ -454,6 +454,24 @@ entries:
     type: application
     urls:
     - https://github.com/treydock/robjuz-helm-charts/releases/download/nominatim-2.0.0-rc2/nominatim-2.0.0-rc2.tgz
+    version: 2.0.0-rc2
+  - apiVersion: v2
+    appVersion: "4.0"
+    created: "2022-08-01T19:13:33.268868774Z"
+    dependencies:
+    - name: common
+      repository: https://charts.bitnami.com/bitnami
+      version: 1.x.x
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: file://./charts/postgresql
+      version: 11.6.20
+    description: A Helm chart for Kubernetes
+    digest: f703f6e7a840ffb4a18a64393a023009316e0af225b06a4bc30d0576e2244e1a
+    name: nominatim
+    type: application
+    urls:
+    - https://github.com/robjuz/helm-charts/releases/download/nominatim-2.0.0-rc2/nominatim-2.0.0-rc2.tgz
     version: 2.0.0-rc2
   - apiVersion: v2
     appVersion: "3.7"
@@ -1178,4 +1196,4 @@ entries:
     urls:
     - https://github.com/robjuz/helm-charts/releases/download/shopware-1.0.0/shopware-1.0.0.tgz
     version: 1.0.0
-generated: "2022-08-22T20:48:35.299634324Z"
+generated: "2022-08-22T20:56:51.692660528Z"
