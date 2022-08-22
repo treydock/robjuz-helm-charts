@@ -6,7 +6,7 @@ dependencies:
   - name: mariadb
     condition: mariadb.enabled
     repository: https://charts.bitnami.com/bitnami
-    version: 9.x.x
+    version: 10.x.x
   - name: redis
     version: 15.x.x
     repository: https://charts.bitnami.com/bitnami
