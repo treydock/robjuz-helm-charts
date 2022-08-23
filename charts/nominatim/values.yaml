@@ -37,6 +37,7 @@ nominatimInitialize:
   importStyle: full
   # customStyleUrl: https://raw.githubusercontent.com/david-mart/Nominatim/master/settings/import-street.style
   threads: 16
+  extraEnv: {}
 
 nominatimReplications:
   enabled: false
@@ -44,6 +45,7 @@ nominatimReplications:
   updateInterval: 86400
   recheckInterval: 900
   resources: {}
+  extraEnv: {}
 
 nominatim:
   databaseModulePath: /bitnami
