@@ -195,14 +195,13 @@ postgresql:
     username: nominatim
     password: nominatim
 
-  service:
-    ports:
-      postgresql: 5432
-
-  persistence:
-    size: 500Gi
-
-  postgresqlExtendedConf: {}
+  primary:
+    service:
+      ports:
+        postgresql: 5432
+    persistence:
+      size: 500Gi
+    extendedConfiguration: {}
 
 externalDatabase:
   ## @param externalDatabase.host External Database server host
