@@ -201,7 +201,7 @@ postgresql:
         postgresql: 5432
     persistence:
       size: 500Gi
-    extendedConfiguration: {}
+    extendedConfiguration: ''
 
 externalDatabase:
   ## @param externalDatabase.host External Database server host
