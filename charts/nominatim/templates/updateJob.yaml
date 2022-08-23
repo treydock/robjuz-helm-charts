@@ -15,7 +15,7 @@ spec:
         {{- with .Values.podLabels }}
           {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
         {{- end }}
-          {{- include "nominatim.selectorLabels.replication" . | nindent 8 }}
+        {{- include "nominatim.selectorLabels.replication" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -85,11 +85,6 @@ spec:
               value: {{ include "nominatim.databaseName" . }}
           securityContext:
             {{- toYaml .Values.initSecurityContext | nindent 12 }}
-          volumeMounts:
-          {{- if .Values.projectDir.enabled }}
-            - mountPath: /nominatim
-              name: project-dir
-          {{- end }}
           {{- with .Values.initResources }}
           resources:
             {{- toYaml . | nindent 12 }}

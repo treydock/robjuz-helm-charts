@@ -7,16 +7,45 @@ metadata:
     {{- include "nominatim.labels" . | nindent 4 }}
 spec:
   template:
-    {{- with .Values.podLabels }}
     metadata:
       labels:
-        {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
-    {{- end }}
+        {{- with .Values.podLabels }}
+          {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+        {{- end }}
+        {{- include "nominatim.selectorLabels.init" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      initContainers:
+        - name: wait-for-db
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          workingDir: /nominatim
+          command:
+          - /bin/bash
+          - -ec
+          - |
+            until psql -t -c "SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'import_status')" 2>/dev/null | grep -q t
+            do
+              echo "Waiting for postgresql database to exist"
+              sleep 30
+            done
+          env:
+            - name: PGHOST
+              value: {{ include "nominatim.databaseHost" . }}
+            - name: PGUSER
+              value: {{ include "nominatim.databaseRoot" . }}
+            - name: PGPASSWORD
+              value: {{ include "nominatim.databaseRootPassword" . }}
+            - name: PGDATABASE
+              value: {{ include "nominatim.databaseName" . }}
+          securityContext:
+            {{- toYaml .Values.initSecurityContext | nindent 12 }}
+          {{- with .Values.initResources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"

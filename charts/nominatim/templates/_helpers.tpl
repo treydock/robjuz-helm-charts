@@ -63,6 +63,14 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Init selector labels
+*/}}
+{{- define "nominatim.selectorLabels.init" -}}
+app.kubernetes.io/name: {{ include "nominatim.name" . }}-init
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
 Replication selector labels
 */}}
 {{- define "nominatim.selectorLabels.replication" -}}
