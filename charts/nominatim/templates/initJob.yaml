@@ -7,11 +7,12 @@ metadata:
     {{- include "nominatim.labels" . | nindent 4 }}
 spec:
   template:
-    {{- with .Values.podLabels }}
     metadata:
       labels:
-        {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
-    {{- end }}
+        {{- with .Values.podLabels }}
+          {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+        {{- end }}
+        {{- include "nominatim.selectorLabels.init" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
