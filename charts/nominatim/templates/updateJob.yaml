@@ -85,11 +85,6 @@ spec:
               value: {{ include "nominatim.databaseName" . }}
           securityContext:
             {{- toYaml .Values.initSecurityContext | nindent 12 }}
-          volumeMounts:
-          {{- if .Values.projectDir.enabled }}
-            - mountPath: /nominatim
-              name: project-dir
-          {{- end }}
           {{- with .Values.initResources }}
           resources:
             {{- toYaml . | nindent 12 }}
