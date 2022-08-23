@@ -79,6 +79,10 @@ spec:
               value: {{ include "nominatim.databaseRootPassword" . }}
             - name: PGDATABASE
               value: postgres
+          {{- range $name, $value := .Values.nominatimInitialize.extraEnv }}
+            - name: {{- include "common.tplvalues.render" (dict "value" $name "context" $) }}
+              value: {{- include "common.tplvalues.render" (dict "value" $value "context" $) }}
+          {{- end }}
           command:
             - /bin/bash
             - -ec

@@ -43,8 +43,9 @@ spec:
               value: {{ .Values.nominatimReplications.updateInterval | quote }}
             - name: NOMINATIM_REPLICATION_RECHECK_INTERVAL
               value: {{ .Values.nominatimReplications.recheckInterval | quote }}
-            {{- if .Values.nominatimReplications.extraEnv }}
-            {{- include "common.tplvalues.render" (dict "value" .Values.nominatim.extraEnv "context" $) | nindent 12 }}
+          {{- range $name, $value := .Values.nominatimReplications.extraEnv }}
+            - name: {{- include "common.tplvalues.render" (dict "value" $name "context" $) }}
+              value: {{- include "common.tplvalues.render" (dict "value" $value "context" $) }}
           {{- end }}
           command:
             - nominatim
