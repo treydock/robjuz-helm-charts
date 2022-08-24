@@ -26,9 +26,9 @@ spec:
           - /bin/bash
           - -ec
           - |
-            until psql -t -c "SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'import_status')" 2>/dev/null | grep -q t
+            until pg_isready
             do
-              echo "Waiting for postgresql database to exist"
+              echo "Waiting for postgresql to be ready"
               sleep 30
             done
           env:
@@ -38,8 +38,6 @@ spec:
               value: {{ include "nominatim.databaseRoot" . }}
             - name: PGPASSWORD
               value: {{ include "nominatim.databaseRootPassword" . }}
-            - name: PGDATABASE
-              value: {{ include "nominatim.databaseName" . }}
           securityContext:
             {{- toYaml .Values.initSecurityContext | nindent 12 }}
           {{- with .Values.initResources }}
