@@ -421,6 +421,24 @@ entries:
   nominatim:
   - apiVersion: v2
     appVersion: "4.0"
+    created: "2022-08-24T13:51:37.684139138Z"
+    dependencies:
+    - name: common
+      repository: https://charts.bitnami.com/bitnami
+      version: 1.x.x
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: file://./charts/postgresql
+      version: 11.6.20
+    description: A Helm chart for Kubernetes
+    digest: fd68ac7b41ffe47514026ce8ae5965f4025bb8529e779361da0fb90e9ed8f66c
+    name: nominatim
+    type: application
+    urls:
+    - https://github.com/treydock/robjuz-helm-charts/releases/download/nominatim-2.0.0-rc9/nominatim-2.0.0-rc9.tgz
+    version: 2.0.0-rc9
+  - apiVersion: v2
+    appVersion: "4.0"
     created: "2022-08-24T10:06:11.242375181Z"
     dependencies:
     - name: common
@@ -1286,4 +1304,4 @@ entries:
     urls:
     - https://github.com/robjuz/helm-charts/releases/download/shopware-1.0.0/shopware-1.0.0.tgz
     version: 1.0.0
-generated: "2022-08-24T10:06:11.242591082Z"
+generated: "2022-08-24T13:51:37.68437634Z"
