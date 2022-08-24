@@ -63,16 +63,16 @@ spec:
           {{- end }}
         {{- if .Values.nominatimInitialize.enabled }}
       initContainers:
-        - name: wait-for-db
+        - name: init-wait
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           workingDir: /nominatim
           command:
           - /bin/bash
           - -ec
           - |
-            until psql -t -c "SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'import_status')" 2>/dev/null | grep -q t
+            until test -f /nominatim/.import-complete
             do
-              echo "Waiting for postgresql database to exist"
+              echo "Waiting for init to complete"
               sleep 30
             done
           env:
@@ -90,6 +90,11 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          volumeMounts:
+            {{- if .Values.projectDir.enabled }}
+            - mountPath: /nominatim
+              name: project-dir
+            {{- end }}
       {{- end }}
       restartPolicy: Always
       volumes:

@@ -88,6 +88,10 @@ spec:
             - -ec
             - |
               set -x
+              if [ -f /nominatim/.import-complete ]; then
+                echo "Import complete detected"
+                exit 0
+              fi
 
             {{- if .Values.nominatimInitialize.customStyleUrl }}
               curl -L -o custom.style {{ .Values.nominatimInitialize.customStyleUrl }}
@@ -114,6 +118,7 @@ spec:
               if [ "$REPLICATION_ENABLED" = "true" ]; then
                 nominatim replication --init
               fi
+              touch /nominatim/.import-complete
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           {{- with .Values.resources }}
