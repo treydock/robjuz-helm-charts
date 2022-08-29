@@ -27,7 +27,7 @@ data:
         DirectoryIndex search.php
         Require all granted
 
-      {{- if .Values.nominatimUi.enabled }}
+      {{- if and .Values.nominatimUi.enabled .Values.nominatimUi.rewrite }}
         RewriteEngine On
 
         # This must correspond to the URL where nominatim can be found.
