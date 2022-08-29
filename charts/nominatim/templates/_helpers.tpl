@@ -169,10 +169,6 @@ pgsql:host={{ include "nominatim.databaseHost" . }};port={{ include "nominatim.d
 pgsql:host={{ include "nominatim.databaseHost" . }};port={{ include "nominatim.databasePort" . }};user={{ include "nominatim.databaseRoot" . }};password={{ include "nominatim.databaseRootPassword" . }};dbname={{ include "nominatim.databaseName" . }}
 {{- end }}
 
-{{- define "nominatim.containerPort" -}}
-{{- ternary 80 8080 .Values.nominatimUi.enabled -}}
-{{- end }}
-
 {{- define "nominatim.uiUrl" -}}
 {{- printf "https://github.com/osm-search/nominatim-ui/releases/download/v%s/nominatim-ui-%s.tar.gz" .Values.nominatimUi.version .Values.nominatimUi.version }}
 {{- end }}
