@@ -58,7 +58,7 @@ spec:
             - -ec
             - |
                 nominatim refresh --website
-                {{- if .Values.nominatimUi.enabled }}
+                {{- if and .Values.nominatimUi.enabled .Values.nominatimUi.install }}
                 a2enmod rewrite
                 {{- end }}
                 /usr/sbin/apache2ctl -D FOREGROUND
@@ -86,8 +86,10 @@ spec:
             {{- if .Values.nominatimUi.enabled }}
             - mountPath: /etc/apache2/sites-available
               name: apache-config
+            {{- if .Values.nominatimUi.install }}
             - mountPath: /nominatim-ui
               name: nominatim-ui
+            {{- end }}
             {{- if .Values.nominatimUi.configuration }}
             - name: ui-config
               mountPath: /nominatim-ui/dist/theme/config.theme.js
@@ -130,7 +132,7 @@ spec:
               name: project-dir
             {{- end }}
       {{- end }}
-      {{- if .Values.nominatimUi.enabled }}
+      {{- if and .Values.nominatimUi.enabled .Values.nominatimUi.install }}
         - name: nominatim-ui-download
           image: curlimages/curl
           workingDir: /nominatim-ui
@@ -174,12 +176,14 @@ spec:
         - name: apache-config
           configMap:
             name: {{ include "nominatim.fullname" . }}-apache-configmap
-        {{- if .Values.nominatimUi.enabled }}
+      {{- if .Values.nominatimUi.enabled }}
         {{- if .Values.nominatimUi.configuration }}
         - name: ui-config
           configMap:
             name: {{ include "nominatim.fullname" . }}-ui-configmap
         {{- end }}
+        {{- if .Values.nominatimUi.install }}
         - name: nominatim-ui
           emptyDir: {}
         {{- end }}
+      {{- end }}

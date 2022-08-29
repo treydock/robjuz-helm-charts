@@ -53,6 +53,7 @@ nominatim:
 nominatimUi:
   enabled: true
   version: 3.2.1
+  install: true
   configuration: |-
     Nominatim_Config.Nominatim_API_Endpoint = '/';
 
