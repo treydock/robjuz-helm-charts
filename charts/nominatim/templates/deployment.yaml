@@ -17,9 +17,13 @@ spec:
   {{- end }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
+      {{- end }}
+        checksum/apache-config: {{ include (print $.Template.BasePath "/apache-configmap.yaml") . | sha256sum }}
+      {{- if .Values.nominatimUi.configuration }}
+        checksum/ui-config: {{ include (print $.Template.BasePath "/ui-configmap.yaml") . | sha256sum }}
       {{- end }}
       labels:
       {{- with .Values.podLabels }}
