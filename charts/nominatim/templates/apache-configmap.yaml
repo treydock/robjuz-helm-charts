@@ -6,8 +6,8 @@ metadata:
     {{- include "nominatim.labels" . | nindent 4 }}
 data:
   000-default.conf: |
-    Listen {{ include "nominatim.containerPort" . }}
-    <VirtualHost *:{{ include "nominatim.containerPort" . }}>
+    Listen {{ .Values.service.port }}
+    <VirtualHost *:{{ .Values.service.port }}>
       DocumentRoot /nominatim/website
       CustomLog /dev/stdout combined
       ErrorLog  /dev/stderr

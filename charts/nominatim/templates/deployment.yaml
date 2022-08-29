@@ -64,7 +64,7 @@ spec:
                 /usr/sbin/apache2ctl -D FOREGROUND
           ports:
             - name: http
-              containerPort: {{ include "nominatim.containerPort" . }}
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
