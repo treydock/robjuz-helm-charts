@@ -61,8 +61,8 @@ spec:
             - mountPath: /nominatim
               name: project-dir
           {{- end }}
-        {{- if .Values.nominatimInitialize.enabled }}
       initContainers:
+      {{- if .Values.nominatimInitialize.enabled }}
         - name: init-wait
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           workingDir: /nominatim
@@ -96,6 +96,31 @@ spec:
               name: project-dir
             {{- end }}
       {{- end }}
+        - name: wait-for-db
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          workingDir: /nominatim
+          command:
+          - /bin/bash
+          - -ec
+          - |
+            until pg_isready
+            do
+              echo "Waiting for postgresql to be ready"
+              sleep 30
+            done
+          env:
+            - name: PGHOST
+              value: {{ include "nominatim.databaseHost" . }}
+            - name: PGUSER
+              value: {{ include "nominatim.databaseRoot" . }}
+            - name: PGPASSWORD
+              value: {{ include "nominatim.databaseRootPassword" . }}
+          securityContext:
+            {{- toYaml .Values.initSecurityContext | nindent 12 }}
+          {{- with .Values.initResources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
       restartPolicy: Always
       volumes:
       {{- if  .Values.projectDir.enabled }}
