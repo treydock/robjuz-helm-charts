@@ -547,6 +547,24 @@ entries:
     version: 2.0.0-rc3
   - apiVersion: v2
     appVersion: "4.0"
+    created: "2022-08-22T20:48:35.108785985Z"
+    dependencies:
+    - name: common
+      repository: https://charts.bitnami.com/bitnami
+      version: 1.x.x
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: file://./charts/postgresql
+      version: 11.6.20
+    description: A Helm chart for Kubernetes
+    digest: 492dd730f658caf0ded8255ae5e1dbf7341792c40118d9c2b0e583a9fac79508
+    name: nominatim
+    type: application
+    urls:
+    - https://github.com/treydock/robjuz-helm-charts/releases/download/nominatim-2.0.0-rc2/nominatim-2.0.0-rc2.tgz
+    version: 2.0.0-rc2
+  - apiVersion: v2
+    appVersion: "4.0"
     created: "2022-08-01T19:13:33.268868774Z"
     dependencies:
     - name: common
@@ -565,7 +583,7 @@ entries:
     version: 2.0.0-rc2
   - apiVersion: v2
     appVersion: "4.0"
-    created: "2022-08-22T20:48:35.108785985Z"
+    created: "2024-06-03T17:58:17.899893157Z"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -575,12 +593,12 @@ entries:
       repository: file://./charts/postgresql
       version: 11.6.20
     description: A Helm chart for Kubernetes
-    digest: 492dd730f658caf0ded8255ae5e1dbf7341792c40118d9c2b0e583a9fac79508
+    digest: 3f79dcb7c523f7f1e4795b464d40b761d41fd31a8451c63d293337d8a93cf439
     name: nominatim
     type: application
     urls:
-    - https://github.com/treydock/robjuz-helm-charts/releases/download/nominatim-2.0.0-rc2/nominatim-2.0.0-rc2.tgz
-    version: 2.0.0-rc2
+    - https://github.com/treydock/robjuz-helm-charts/releases/download/nominatim-2.0.0-rc15/nominatim-2.0.0-rc15.tgz
+    version: 2.0.0-rc15
   - apiVersion: v2
     appVersion: "4.0"
     created: "2022-09-14T12:22:52.588763938Z"
@@ -1394,4 +1412,4 @@ entries:
     urls:
     - https://github.com/robjuz/helm-charts/releases/download/shopware-1.0.0/shopware-1.0.0.tgz
     version: 1.0.0
-generated: "2022-09-14T12:22:52.589131434Z"
+generated: "2024-06-03T17:58:17.900135509Z"
