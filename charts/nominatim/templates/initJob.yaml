@@ -6,6 +6,7 @@ metadata:
   labels:
     {{- include "nominatim.labels" . | nindent 4 }}
 spec:
+  ttlSecondsAfterFinished: {{ .Values.nominatimInitialize.ttlSecondsAfterFinished }}
   template:
     metadata:
       labels:
