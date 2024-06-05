@@ -547,6 +547,24 @@ entries:
     version: 2.0.0-rc3
   - apiVersion: v2
     appVersion: "4.0"
+    created: "2022-08-01T19:13:33.268868774Z"
+    dependencies:
+    - name: common
+      repository: https://charts.bitnami.com/bitnami
+      version: 1.x.x
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: file://./charts/postgresql
+      version: 11.6.20
+    description: A Helm chart for Kubernetes
+    digest: f703f6e7a840ffb4a18a64393a023009316e0af225b06a4bc30d0576e2244e1a
+    name: nominatim
+    type: application
+    urls:
+    - https://github.com/robjuz/helm-charts/releases/download/nominatim-2.0.0-rc2/nominatim-2.0.0-rc2.tgz
+    version: 2.0.0-rc2
+  - apiVersion: v2
+    appVersion: "4.0"
     created: "2022-08-22T20:48:35.108785985Z"
     dependencies:
     - name: common
@@ -565,7 +583,7 @@ entries:
     version: 2.0.0-rc2
   - apiVersion: v2
     appVersion: "4.0"
-    created: "2022-08-01T19:13:33.268868774Z"
+    created: "2024-06-05T18:06:11.62434345Z"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -575,12 +593,12 @@ entries:
       repository: file://./charts/postgresql
       version: 11.6.20
     description: A Helm chart for Kubernetes
-    digest: f703f6e7a840ffb4a18a64393a023009316e0af225b06a4bc30d0576e2244e1a
+    digest: d55d1d8c14b2b6d47d891865828817af0a1af637c102a4d90fe73f5535d919f3
     name: nominatim
     type: application
     urls:
-    - https://github.com/robjuz/helm-charts/releases/download/nominatim-2.0.0-rc2/nominatim-2.0.0-rc2.tgz
-    version: 2.0.0-rc2
+    - https://github.com/treydock/robjuz-helm-charts/releases/download/nominatim-2.0.0-rc16/nominatim-2.0.0-rc16.tgz
+    version: 2.0.0-rc16
   - apiVersion: v2
     appVersion: "4.0"
     created: "2024-06-03T17:58:17.899893157Z"
@@ -1412,4 +1430,4 @@ entries:
     urls:
     - https://github.com/robjuz/helm-charts/releases/download/shopware-1.0.0/shopware-1.0.0.tgz
     version: 1.0.0
-generated: "2024-06-03T17:58:17.900135509Z"
+generated: "2024-06-05T18:06:11.62464918Z"
